@@ -2,106 +2,127 @@
 #ifndef CODE_H
 #define CODE_H
 
-const char htmlContent[] PROGMEM = R"====(
+const char webpage[] PROGMEM = R"rawliteral(
+
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LED Brightness Control</title>
+    <title>DHT11 Temperature Monitor</title>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #101827;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef2f7;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
 
-    .container {
-      max-width: 400px;
-      margin: 50px auto;
-      padding: 30px 20px;
-      background: #1e293b;
-      border-radius: 20px;
-    }
+        h1 {
+            color: #1e293b;
+        }
 
-    h1 {
-      color: #38bdf8;
-    }
+        .container {
+            max-width: 400px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
 
-    .brightness-slider {
-      width: 100%;
-      margin: 30px 0;
-      accent-color: #16a34a;
-      cursor: pointer;
-    }
+        .card {
+            background: #f1f5f9;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+        }
 
-    #brightnessValue {
-      font-size: 35px;
-      font-weight: bold;
-      color: #4ade80;
-    }
+        .value {
+            font-size: 40px;
+            font-weight: bold;
+            color: #2563eb;
+        }
 
-    #status {
-      font-size: 18px;
-      margin-top: 20px;
-    }
-  </style>
+        .label {
+            font-size: 18px;
+            color: #475569;
+        }
+
+        #status {
+            color: #16a34a;
+            font-size: 14px;
+        }
+    </style>
 </head>
 
 <body>
 
-  <div class="container">
+    <h1>DHT11 Monitoring System</h1>
 
-    <h1>LED Brightness Control</h1>
+    <div class="container">
 
-    <h2>Adjust Brightness</h2>
+        <div class="card">
+            <div class="label">Temperature</div>
+            <div class="value">
+                <span id="temperature">--</span> °C
+            </div>
+        </div>
 
-    <div id="brightnessValue">0%</div>
+        <div class="card">
+            <div class="label">Humidity</div>
+            <div class="value">
+                <span id="humidity">--</span> %
+            </div>
+        </div>
 
-    <input
-      type="range"
-      min="0"
-      max="100"
-      value="0"
-      class="brightness-slider"
-      id="brightnessSlider"
-      oninput="changeBrightness(this.value)"
-    >
+        <p id="status">Connecting to sensor...</p>
 
-    <div id="status">LED is OFF</div>
+    </div>
 
-  </div>
+    <script>
 
-  <script>
+        function updateData() {
 
-    let timer;
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
 
-    function changeBrightness(value) {
+                    if (data.error) {
+                        document.getElementById("status").innerHTML =
+                            "Sensor reading failed";
+                        return;
+                    }
 
-      document.getElementById("brightnessValue").innerText =
-        value + "%";
+                    document.getElementById("temperature").innerHTML =
+                        data.temperature;
 
-      document.getElementById("status").innerText =
-        Number(value) > 0 ? "LED is ON" : "LED is OFF";
+                    document.getElementById("humidity").innerHTML =
+                        data.humidity;
 
-      clearTimeout(timer);
+                    document.getElementById("status").innerHTML =
+                        "Sensor connected | Live data";
 
-      timer = setTimeout(() => {
+                })
+                .catch(error => {
 
-        fetch("/brightness?value=" + value)
-          .catch(error => console.log(error));
+                    document.getElementById("status").innerHTML =
+                        "Connection error";
 
-      }, 50);
+                });
+        }
 
-    }
+        updateData();
 
-  </script>
+        setInterval(updateData, 2000);
+
+    </script>
 
 </body>
 </html>
-)====";
+
+)rawliteral";
 
 #endif
